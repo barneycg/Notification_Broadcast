@@ -1,0 +1,13 @@
+LAWN Alliance bot to broadcast eve notifications to Jabber
+
+Requirements
+============
+libxmpp-php
+mysql
+eve systems table from datadump
+
+sql directory contains an sql file with the required tables (empty except for the eve-systems table)
+
+configuration for username and password is in nb.ini and example is given in nb_example.ini
+at least 1 api key must be placed in the api_key table.  API must be of the new style for a single character and show notifications and notificationtexts
+
