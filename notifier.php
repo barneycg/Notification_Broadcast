@@ -1,90 +1,29 @@
-#!/usr/bin/php
+#!/usr/bin/php5
 <?php
-require_once '/opt/ale/factory.php';
-include("XMPPHP/XMPP.php");
-require_once './Thread.php';
+chdir('/home/barney/Notification_Broadcast/');
+require_once '/home/barney/Notification_Broadcast/Thread.php';
+echo "starting Notifier\n";
 
-ini_set("auto_detect_line_endings", true);
-
-$config = parse_ini_file("nb.ini", true);
-
-$notifications=array();
 $message ='';
 
-$jabcon = new XMPPHP_XMPP($config['jabber']['host'], 5222, $config['jabber']['user'], $config['jabber']['password'], 'Notifier');
-$jabcon->useEncryption(true);
-try {
-	$jabcon->connect();
-	$jabcon->processUntil('session_start');	
-	$jabcon->presence($status="Online");
-}
-catch (Exception $e) {
-	echo $e->getMessage();
-	exit;
-}
+// Thread required for each corp
 
-$bluep = Thread::create("bluep.php");
-$twoold = Thread::create("2-old.php");
-$lawns = Thread::create("lawns.php");
+$bluep = Thread::create("/home/barney/Notification_Broadcast/bluep.php");
+$lawns = Thread::create("/home/barney/Notification_Broadcast/lawns.php");
+$pvpu = Thread::create("/home/barney/Notification_Broadcast/pvp-u.php");
+$exi = Thread::create("/home/barney/Notification_Broadcast/5exi.php");
 
 while (1)
 {
-$bluep_resp='';
-$twoold_resp='';
-$lawns_resp='';
-$bluep_resp = $bluep->listen();
-$twoold_resp = $twoold->listen();
-$lawns_resp = $lawns->listen();
+	$bluep_resp='';
+	$lawns_resp='';
+	$pvpu_resp='';
+	$exi_resp='';
+	$bluep_resp = $bluep->listen();
+	$lawns_resp = $lawns->listen();
+	$pvpu_resp = $pvpu->listen();
+	$exi_resp = $exi->listen();
 
-
-echo $bluep_resp;
-if (!empty($bluep_resp))
-{
-	if (!empty($twoold_resp))
-	{
-		echo "\n\n";
-	}
-	else
-	{
-		echo "\n";
-	}
+	sleep(1);
 }
-echo $twoold_resp;
-if (!empty($twoold_resp))
-{
-	if (!empty($lawns_resp))
-        {
-                echo "\n\n";
-        }
-        else
-        {
-                echo "\n";
-        }
-
-}
-echo $lawns_resp;
-if (!empty($lawns_resp))
-{
-	echo "\n";
-}
-
-if (preg_match("/This is a Broadcast/",$bluep_resp))
-{	
-	$jabcon->message('tb1@broadcast.lawnalliance.org', $bluep_resp);
-}
-if (preg_match("/This is a Broadcast/",$twoold_resp))
-{
-	$jabcon->message('tb1@broadcast.lawnalliance.org', $twoold_resp);
-}
-if (preg_match("/This is a Broadcast/",$lawns_resp))
-{
-        $jabcon->message('tb1@broadcast.lawnalliance.org', $lawns_resp);
-}
-
-
-
-sleep(1);
-
-}
-$jabcon->disconnect();
 ?>

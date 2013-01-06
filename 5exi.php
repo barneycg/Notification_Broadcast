@@ -11,17 +11,17 @@ $notifications=array();
 $message ='';
 
 $pdo = new PDO("mysql:host=".$config['mysql']['host'].";dbname=".$config['mysql']['db_name'], $config['mysql']['user'], $config['mysql']['password']);
-$api_count_sql = $pdo->prepare('select count(*) as count from api_keys where corp = "LAWNS"');
+$api_count_sql = $pdo->prepare('select count(*) as count from api_keys where corp = "5EXI"');
 $previous_sql = $pdo->prepare('select notificationID from notification where notificationID= :nid');
-$api_sql = $pdo->prepare('select id,key_id,vcode,charid from api_keys where corp = "LAWNS"');
+$api_sql = $pdo->prepare('select id,key_id,vcode,charid from api_keys where corp = "5EXI"');
 $system_sql = $pdo->prepare('select sys_name from eve_systems where sys_id= :systemid');
 $moon_sql = $pdo->prepare('select itemName from mapDenormalize where itemID= :moonid');
 $notified_sql = $pdo->prepare('insert into notification values(:nid)');
 
-$l = fopen("/home/barney/Notification_Broadcast/lawns.txt", "a");
+$l = fopen("/home/barney/Notification_Broadcast/5exi.txt", "a");
 fwrite($l, "Starting\n");
 
-$jabcon = new XMPPHP_XMPP($config['jabber']['host'], 5222, $config['jabber']['user'], $config['jabber']['password'], 'Notifier-LAWNS');
+$jabcon = new XMPPHP_XMPP($config['jabber']['host'], 5222, $config['jabber']['user'], $config['jabber']['password'], 'Notifier-5EXI');
 // Enables TLS - enabled by default, call before connect()!
 $jabcon->useEncryption(true);
 try {
