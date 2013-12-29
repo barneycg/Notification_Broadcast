@@ -1,8 +1,8 @@
 <?php
 
-function notification_decode ($type,$owner) {
-	global $type_name,$message,$skip,$ale,$values,$system_sql,$moon_sql,$evedb;
-
+function notification_decode ($type) {
+	global $type_name,$message,$skip,$ale,$values,$system_sql,$moon_sql;
+	
 	$corpid='';
 	$systemid='';
 	$corp_details='';
@@ -17,9 +17,6 @@ function notification_decode ($type,$owner) {
 	$from_corp='';
 	$structure_name='';
 	$allianceid='';
-	$shield = 100;
-	$armor = 100;
-	$hull = 100;
 
 	switch ($type) {
 		case '2':
@@ -216,7 +213,6 @@ function notification_decode ($type,$owner) {
 			corpID: 98066163
 			solarSystemID: 3000199
 			*/
-			
 			if (array_key_exists ( 'corpID' , $values ))
 			{
 				$corpid = $values['corpID'];
@@ -227,12 +223,12 @@ function notification_decode ($type,$owner) {
 			if (array_key_exists ( 'solarSystemID' , $values ))
 			{
 				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
+				$system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$system_sql->fetch()){
 					$system_name = $system_row['sys_name'];
 				}
 			}
-			$message = "$corp_name has lost sovereignty in $system_name";
+			$message = "$corp_name have lost Sovereignty in $system_name";
 			break;
 		case '42':
 			$type_name="Sovereignty claim lost (corporation)";
@@ -248,8 +244,6 @@ function notification_decode ($type,$owner) {
 			break;
 		case '45':
 			$type_name="Alliance anchoring alert";
-			
-			$alliance_name = "no alliance";
 			
 			if (array_key_exists ( 'corpID' , $values ))
 			{
@@ -273,21 +267,21 @@ function notification_decode ($type,$owner) {
 			if (array_key_exists ( 'solarSystemID' , $values ))
 			{
 				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
+				$system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$system_sql->fetch()){
 					$system_name = $system_row['sys_name'];
 				}
 			}
 			if (array_key_exists ( 'moonID' , $values ))
 			{
 				$moonid  = $values['moonID'];
-				$evedb->moon_sql->execute(array(':moonid'=>$moonid));
-				while ($moon_row=$evedb->moon_sql->fetch()){
+				$moon_sql->execute(array(':moonid'=>$moonid));
+				while ($moon_row=$moon_sql->fetch()){
 						$moon_name = $moon_row['itemName'];
 				}
 			}
 										
-			$message = "Alliance anchoring alert - $corp_name from $alliance_name anchored a POS in $system_name on moon $moon_name";
+			$message = "Alliance anchoring alert - $corp_name from $alliance_name anchored a POS in $system_name on Moon $moon_name";
 			
 			break;
 			
@@ -350,8 +344,6 @@ function notification_decode ($type,$owner) {
 			solarSystemID: 30004341
 			*/
 			
-			$alliance_name = "no alliance";
-			
 			if (array_key_exists ( 'corpID' , $values ))
 			{
 				$corpid = $values['corpID'];
@@ -366,13 +358,20 @@ function notification_decode ($type,$owner) {
 			if (array_key_exists ( 'solarSystemID' , $values ))
 			{
 				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
+				$system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$system_sql->fetch()){
 					$system_name = $system_row['sys_name'];
 				}
 			}
 			
-			$message = "$corp_name of $alliance_name is anchoring SBUs in $system_name";
+			if (!empty($alliance_name))
+			{
+				$message = "$corp_name of $alliance_name are anchoring SBU's in $system_name";
+			}
+			else
+			{
+				$message = "$corp_name are anchoring SBU's in $system_name";
+			}
 			
 			break;
 		case '49':
@@ -507,61 +506,34 @@ function notification_decode ($type,$owner) {
 			solarSystemID
 			typeID
 			*/
-
-			$alliance_name = "no alliance";
 			
-			if (array_key_exists ( 'shieldValue' , $values ))
-                        {
-				$shield = number_format((float)$values['shieldValue']*100, 2, '.', '');
-			}
-
-			if (array_key_exists ( 'armorValue' , $values ))
-                        {
-				$armor = number_format((float)$values['armorValue']*100, 2, '.', '');
-			}
-			
-			if (array_key_exists ( 'hullValue' , $values ))
-                        {
-				$hull = number_format((float)$values['hullValue']*100, 2, '.', '');
-			}
-			
-
 			if (array_key_exists ( 'aggressorCorpID' , $values ))
 			{
 				$corpid = $values['aggressorCorpID'];
-				if ($corpid == 'null')
-				{
-					$alliance_name = 'UNKNOWN';
-					$corp_name = 'UNKNOWN';
-				}
-				else
-				{
-					$params2['corporationID'] = $corpid; 
-					$corp_details = $ale->corp->CorporationSheet($params2);
-					$corp_name=$corp_details->result->corporationName;
-					$alliance_name=$corp_details->result->allianceName;
-				}
+				$params2['corporationID'] = $corpid; 
+				$corp_details = $ale->corp->CorporationSheet($params2);
+				$corp_name=$corp_details->result->corporationName;
+				$alliance_name=$corp_details->result->allianceName;
 			}
 			
-			if (array_key_exists ( 'solarSystemID' , $values ))
-			{
-				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
-					$system_name = $system_row['sys_name'];
-				}
-			}
-
 			if (array_key_exists ( 'moonID' , $values ))
 			{
 				$moonid  = $values['moonID'];
-				$evedb->moon_sql->execute(array(':moonid'=>$moonid));
-				while ($moon_row=$evedb->moon_sql->fetch()){
+				$moon_sql->execute(array(':moonid'=>$moonid));
+				while ($moon_row=$moon_sql->fetch()){
 						$moon_name = $moon_row['itemName'];
 				}
 			}	
+			if (empty($alliance_name))
+			{
+				$message = "Tower in $moon_name is under attack by $corp_name";
+			}
+			else
+			{
+				$message = "Tower in $moon_name is under attack by $corp_name of $alliance_name";
+			}
 			
-			$message = "Tower (Owner:$owner) on moon $moon_name in $system_name is under attack by $corp_name from $alliance_name\nStatus: \nShield - $shield\nArmor - $armor\nHull - $hull";
+			
 			
 			break;
 		case '76':
@@ -583,21 +555,21 @@ function notification_decode ($type,$owner) {
 			if (array_key_exists ( 'solarSystemID' , $values ))
 			{
 				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
+				$system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$system_sql->fetch()){
 					$system_name = $system_row['sys_name'];
 				}
 			}
 			if (array_key_exists ( 'moonID' , $values ))
 			{
 				$moonid  = $values['moonID'];
-				$evedb->moon_sql->execute(array(':moonid'=>$moonid));
-				while ($moon_row=$evedb->moon_sql->fetch()){
+				$moon_sql->execute(array(':moonid'=>$moonid));
+				while ($moon_row=$moon_sql->fetch()){
 						$moon_name = $moon_row['itemName'];
 				}
 			}	
 			
-			$message = "POS on moon $moon_name (owned by $corp_name) in $system_name is low on resources";
+			$message = "POS in $moon_name owned by $corp_name is low on resources";
 	
 			break;
 		case '77':
@@ -615,28 +587,10 @@ function notification_decode ($type,$owner) {
 			stationID: 61000033
 			typeID: 28156
 			*/			
-
-			$alliance_name = "no alliance";
-
-			if (array_key_exists ( 'shieldValue' , $values ))
-                        {
-				$shield = number_format((float)$values['shieldValue']*100, 2, '.', '');
-			}
-
-			if (array_key_exists ( 'armorValue' , $values ))
-                        {
-				$armor = number_format((float)$values['armorValue']*100, 2, '.', '');
-			}
-			
-			if (array_key_exists ( 'hullValue' , $values ))
-                        {
-				$hull = number_format((float)$values['hullValue']*100, 2, '.', '');
-			}
-			
 			if (array_key_exists ( 'aggressorCorpID' , $values ))
 			{
 				$corpid = $values['aggressorCorpID'];
-				if ($corpid == 'null')
+				if ($corpid = 'null')
 				{
 					$alliance_name = 'UNKNOWN';
 					$corp_name = 'UNKNOWN';
@@ -649,19 +603,17 @@ function notification_decode ($type,$owner) {
 					$alliance_name=$corp_details->result->allianceName;
 				}
 			}
-
 			
 			if (array_key_exists ( 'solarSystemID' , $values ))
 			{
 				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
+				$system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$system_sql->fetch()){
 					$system_name = $system_row['sys_name'];
 				}
 			}
-
-			$message = "Station in $system_name is under attack by $corp_name from $alliance_name\nStatus: \nShield - $shield\nArmor - $armor\nHull - $hull";
 			
+			$message = "Station in $system_name under attack by $corp_name from $alliance_name";
 			break;
 		case '78':
 			$type_name="Station state change message";
@@ -678,13 +630,13 @@ function notification_decode ($type,$owner) {
 			if (array_key_exists ( 'solarSystemID' , $values ))
 			{
 				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
+				$system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$system_sql->fetch()){
 					$system_name = $system_row['sys_name'];
 				}
 			}
 			
-			$message = "Station in $system_name has changed state";
+			$message = "Station in $system_name has changed State";
 			break;
 		case '79':
 			$type_name="Station conquered message";
@@ -716,54 +668,7 @@ function notification_decode ($type,$owner) {
 			break;
 		case '86':
 			$type_name="Territorial Claim Unit under attack";
-
-			$alliance_name = "no alliance";
-			
-			if (array_key_exists ( 'shieldValue' , $values ))
-                        {
-				$shield = number_format((float)$values['shieldValue']*100, 2, '.', '');
-			}
-
-			if (array_key_exists ( 'armorValue' , $values ))
-                        {
-				$armor = number_format((float)$values['armorValue']*100, 2, '.', '');
-			}
-			
-			if (array_key_exists ( 'hullValue' , $values ))
-                        {
-				$hull = number_format((float)$values['hullValue']*100, 2, '.', '');
-			}
-
-			if (array_key_exists ( 'aggressorCorpID' , $values ))
-			{
-				$corpid = $values['aggressorCorpID'];
-				if ($corpid == 'null')
-				{
-					$alliance_name = 'UNKNOWN';
-					$corp_name = 'UNKNOWN';
-				}
-				else
-				{
-					$params2['corporationID'] = $corpid; 
-					$corp_details = $ale->corp->CorporationSheet($params2);
-					$corp_name=$corp_details->result->corporationName;
-					$alliance_name=$corp_details->result->allianceName;
-				}
-			}
-			
-			if (array_key_exists ( 'solarSystemID' , $values ))
-			{
-				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
-					$system_name = $system_row['sys_name'];
-				}
-			}
-
-			
-			$message = "TCU in $system_name (Owner:$owner) is under attack by $corp_name from $alliance_name\nStatus: \nShield - $shield\nArmor - $armor\nHull - $hull";
-
-			//$message = "$type_name in $system_name under attack by $corp_name from $alliance_name";
+			$message = $type_name;
 			break;
 		case '87':
 			$type_name="Sovereignty Blockade Unit under attack";
@@ -777,28 +682,11 @@ function notification_decode ($type,$owner) {
 			shieldValue: 0.7882259002445235
 			solarSystemID: 30000866
 			*/
-
-			$alliance_name = "no alliance";
-						
-			if (array_key_exists ( 'shieldValue' , $values ))
-                        {
-				$shield = number_format((float)$values['shieldValue']*100, 2, '.', '');
-			}
-
-			if (array_key_exists ( 'armorValue' , $values ))
-                        {
-				$armor = number_format((float)$values['armorValue']*100, 2, '.', '');
-			}
 			
-			if (array_key_exists ( 'hullValue' , $values ))
-                        {
-				$hull = number_format((float)$values['hullValue']*100, 2, '.', '');
-			}
-
 			if (array_key_exists ( 'aggressorCorpID' , $values ))
 			{
 				$corpid = $values['aggressorCorpID'];
-				if ($corpid == 'null')
+				if ($corpid = 'null')
 				{
 					$alliance_name = 'UNKNOWN';
 					$corp_name = 'UNKNOWN';
@@ -815,39 +703,21 @@ function notification_decode ($type,$owner) {
 			if (array_key_exists ( 'solarSystemID' , $values ))
 			{
 				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
+				$system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$system_sql->fetch()){
 					$system_name = $system_row['sys_name'];
 				}
 			}
 		
-			$message = "SBU in $system_name (Owner:$owner) is under attack by $corp_name from $alliance_name\nStatus: \nShield - $shield\nArmor - $armor\nHull - $hull";
-			//$message = "SBU in $system_name under attack by $corp_name from $alliance_name";
+			$message = "SBU in $system_name under attack by $corp_name from $alliance_name";
 			break;
 		case '88':
 			$type_name="Infrastructure Hub under attack";
 			
-			$alliance_name="no alliance";
-			
-			if (array_key_exists ( 'shieldValue' , $values ))
-                        {
-				$shield = number_format((float)$values['shieldValue']*100, 2, '.', '');
-			}
-
-			if (array_key_exists ( 'armorValue' , $values ))
-                        {
-				$armor = number_format((float)$values['armorValue']*100, 2, '.', '');
-			}
-			
-			if (array_key_exists ( 'hullValue' , $values ))
-                        {
-				$hull = number_format((float)$values['hullValue']*100, 2, '.', '');
-			}
-
 			if (array_key_exists ( 'aggressorCorpID' , $values ))
 			{
 				$corpid = $values['aggressorCorpID'];
-				if ($corpid == 'null')
+				if ($corpid = 'null')
 				{
 					$alliance_name = 'UNKNOWN';
 					$corp_name = 'UNKNOWN';
@@ -864,14 +734,13 @@ function notification_decode ($type,$owner) {
 			if (array_key_exists ( 'solarSystemID' , $values ))
 			{
 				$systemid = $values['solarSystemID'];
-				$evedb->system_sql->execute(array(':systemid'=>$systemid));
-				while ($system_row=$evedb->system_sql->fetch()){
+				$system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$system_sql->fetch()){
 					$system_name = $system_row['sys_name'];
 				}
 			}
 			
-			$message = "iHub in $system_name (Owner:$owner) is under attack by $corp_name from $alliance_name\nStatus: \nShield - $shield\nArmor - $armor\nHull - $hull";
-			//$message = "iHub in $system_name under attack by $corp_name from $alliance_name";
+			$message = "iHub in $system_name under attack by $corp_name from $alliance_name";
 			break;
 		case '89':
 			$type_name = "Contact notification";
@@ -955,4 +824,3 @@ function notification_decode ($type,$owner) {
 	}
 }
 ?>
-

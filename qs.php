@@ -10,10 +10,10 @@ $config = parse_ini_file("/home/barney/Notification_Broadcast/nb.ini", true);
 $notifications=array();
 $message ='';
 
-$l = fopen("/home/barney/Notification_Broadcast/pvp-u.txt", "a");
+$l = fopen("/home/barney/Notification_Broadcast/qs.txt", "a");
 fwrite($l, date("c") . "  Starting\n");
 
-$jabcon = new XMPPHP_XMPP($config['jabber']['host'], 5222, $config['jabber']['user'], $config['jabber']['password'], 'Notifier-PVP-U');
+$jabcon = new XMPPHP_XMPP($config['jabber']['host'], 5222, $config['jabber']['user'], $config['jabber']['password'], 'Notifier-QS');
 // Enables TLS - enabled by default, call before connect()!
 $jabcon->useEncryption(true);
 try {
@@ -39,9 +39,9 @@ class evedb {
 		//$config = parse_ini_file("/home/barney/Notification_Broadcast/nb.ini", true);
 		$this->pdo = new PDO("mysql:host=".$config['mysql']['host'].";dbname=".$config['mysql']['db_name'], $config['mysql']['user'], $config['mysql']['password'],array(PDO::ATTR_PERSISTENT => false));
 		
-		$this->api_count_sql = $this->pdo->prepare('select count(*) as count from api_keys where corp = "PVP-U"');
+		$this->api_count_sql = $this->pdo->prepare('select count(*) as count from api_keys where corp = "QS"');
 		$this->previous_sql = $this->pdo->prepare('select notificationID from notification where notificationID= :nid');
-		$this->api_sql = $this->pdo->prepare('select id,key_id,vcode,charid from api_keys where corp = "PVP-U"');
+		$this->api_sql = $this->pdo->prepare('select id,key_id,vcode,charid from api_keys where corp = "QS"');
 		$this->system_sql = $this->pdo->prepare('select sys_name from eve_systems where sys_id= :systemid');
 		$this->moon_sql = $this->pdo->prepare('select itemName from mapDenormalize where itemID= :moonid');
 		$this->notified_sql = $this->pdo->prepare('insert into notification values(:nid)');
@@ -82,14 +82,15 @@ while (1)
 		$last_api_count = $api_count;
 	}
 
-        if ($api_count !=0)
-                $sleep_time=2100/$api_count;
-        else
-        {
+	if ($api_count !=0)
+		$sleep_time=2100/$api_count;
+	else
+	{
 
-                sleep(3600);
-                continue;
-        }
+		sleep(3600);
+		continue;
+	}
+
 
 	$evedb->api_sql->execute();
 	$result = $evedb->api_sql->fetchall(PDO::FETCH_ASSOC);
@@ -178,7 +179,7 @@ while (1)
 						$values[$m[1][$i]] = $m[2][$i];
 					}
 	
-					notification_decode($notifications[$group][(int)$notice->attributes()->notificationID]['type'],"Jolly Codgers");
+					notification_decode($notifications[$group][(int)$notice->attributes()->notificationID]['type'],"Quiet.Storm");
 
 					if (!$skip)
 					{
