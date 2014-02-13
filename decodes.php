@@ -334,11 +334,31 @@ function notification_decode ($type,$owner) {
 			*/
 			
 		case '46':
-			$type_name="Alliance structure turns vulnerable";
+			$system_name = "";
+			if (array_key_exists ( 'solarSystemID' , $values ))
+			{
+				$systemid = $values['solarSystemID'];
+				$evedb->system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$evedb->system_sql->fetch()){
+					$system_name = $system_row['sys_name'];
+				}
+			}
+
+			$type_name="$system_name turns vulnerable";
 			$message = $type_name;
 			break;
 		case '47':
-			$type_name="Alliance structure turns invulnerable";
+			$system_name = "";
+			if (array_key_exists ( 'solarSystemID' , $values ))
+			{
+				$systemid = $values['solarSystemID'];
+				$evedb->system_sql->execute(array(':systemid'=>$systemid));
+				while ($system_row=$evedb->system_sql->fetch()){
+					$system_name = $system_row['sys_name'];
+				}
+			}
+
+			$type_name="$system_name turns invulnerable";
 			$message = $type_name;
 			break;
 		case '48':
