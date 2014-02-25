@@ -2,3 +2,4 @@ nb.ini
 nohup.out*
 *.txt
 archive
+backup*
